@@ -1,101 +1,148 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <stdint.h>
 
-#define MAX_N   (100000U)
-#define MAX_INPT    (1000000000U)
+#define MAX_N   (100000)
+#define MAX_INPT    (1000000000)
 
-typedef struct mem_maxmin_data{
-    uint32_t slct_num;
-    uint32_t maxmin;
-    struct mem_maxmin_data *next;
-}mem_data;
+int32_t A_arr[(MAX_N + 2U)];
 
-uint32_t A_arr[(MAX_N + 2U)];
-uint32_t mem_maxmin;
-uint32_t uppr;
-mem_data memory[(MAX_N + 1)];
-size_t mem_size = sizeof(mem_data);
 
-uint32_t calc_min(uint32_t strt, uint32_t slct_num, uint32_t max_n, uint32_t max_min);
+int32_t calc_min(int32_t slct_num, int32_t max_n, int32_t uppr);
+int32_t part_cal(int32_t strt, int32_t slct_num, int32_t max_n, int32_t lower);
 
 int main(void)
 {
-    uint32_t i;
-    uint32_t tmp_ret;
-    uint32_t inpt_N, inpt_K;
-    uint32_t *p_tmp_Aarr = &A_arr[0];
+    int32_t i;
+    int32_t tmp_ret;
+    int32_t inpt_N, inpt_K;
+    int32_t upper;
+    int32_t *p_tmp_Aarr = &A_arr[0];
     
 
     /* get input */
-    (void)scanf("%u", &inpt_N);
-    (void)scanf("%u\n", &A_arr[(inpt_N + 1U)]);
-    (void)scanf("%u\n", &inpt_K);
+    (void)scanf("%d", &inpt_N);
+    (void)scanf("%d\n", &A_arr[(inpt_N + 1)]);
+    (void)scanf("%d\n", &inpt_K);
 
-    for (i = 0U; i < inpt_N; i++)
+    for (i = 0; i < inpt_N; i++)
     {
         p_tmp_Aarr++;
-        (void)scanf("%u", p_tmp_Aarr);
+        (void)scanf("%d", p_tmp_Aarr);
     }
 
-    uppr = A_arr[(inpt_N + 1U)] / (inpt_K + 1U);
+    upper = A_arr[(inpt_N + 1)] / (inpt_K + 1);
 
-    tmp_ret = calc_min(0U, inpt_K, inpt_N, 0U);
+    tmp_ret = calc_min(inpt_K, inpt_N, upper);
 
-    printf("%u\n", tmp_ret);
+    printf("%d\n", tmp_ret);
 
     return 0;
 }
 
-uint32_t calc_min(uint32_t strt, uint32_t slct_num, uint32_t max_n, uint32_t max_min)
+
+int32_t calc_min(int32_t slct_num, int32_t max_n, int32_t uppr)
 {
-    uint32_t i;
-    uint32_t tmp_l = 0U, tmp_r = 0U;
-    uint32_t tmp_maxmin = max_min;
-    mem_data *chk = &memory[strt];
+    int32_t ret;
+    int32_t i, j;
+    int32_t srch_val_l = 1;
+    int32_t srch_val_u = uppr;
+    int32_t srch_val_m = uppr / 2;
+    int32_t tmp_u, tmp_l, tmp_m;
 
-    if (tmp_maxmin >= uppr){return tmp_maxmin;}
+    ret = part_cal(0, slct_num, max_n, srch_val_l);
 
-    while (chk->next != (mem_data *)NULL)
+    while (srch_val_l != srch_val_u)
     {
-        if ((chk->slct_num == slct_num))
+        tmp_u = part_cal(0, slct_num, max_n, srch_val_u);
+        
+        
+        if (tmp_u != -1)
         {
-            return (chk->maxmin);
+            ret = tmp_u;
+            break;
         }
         else
         {
-            chk = chk->next;
-        }
-    }
+            tmp_m = part_cal(0, slct_num, max_n, srch_val_m);
 
-    
-    if (slct_num > 1U)
-    {
-        
-    }
-    else
-    {
-        for (i = (strt + 1U); i <= max_n; i++)
-        {
-            tmp_l = A_arr[i] - A_arr[strt];
-            tmp_r = A_arr[(max_n + 1U)] - A_arr[i];
-
-            if (tmp_l >= tmp_r)
+            if (tmp_m != -1)
             {
-                if (tmp_r > tmp_maxmin){tmp_maxmin = tmp_r;}
-                break;
+                srch_val_l = srch_val_m;
+                srch_val_u = (srch_val_l + srch_val_u) / 2;
             }
             else
             {
-                if (tmp_l > tmp_maxmin){tmp_maxmin = tmp_l;}
+                srch_val_u = srch_val_m - 1;
             }
+        }
+
+    }
+
+    return ret;
+}
+
+int32_t part_cal(int32_t strt, int32_t slct_num, int32_t max_n, int32_t lower)
+{
+    int32_t ret = -1;
+    int32_t i;
+    int32_t tmp;
+
+    if (slct_num == 1)
+    {
+        for(i = (strt + 1); i <= max_n; i++)
+        {
+            tmp = A_arr[i] - A_arr[strt];
+            if (tmp >= lower)
+            {
+                int32_t tmp_l = A_arr[(max_n + 1)] - A_arr[i];
+
+                if (tmp_l >= lower)
+                {
+                    if (tmp > tmp_l)
+                    {
+                        ret = tmp_l;
+                    }
+                    else
+                    {
+                        ret = tmp;
+                    }
+                }
+                break;
+            }
+            else{/*nothing*/}
+        }
+    }
+    else
+    {
+        for(i = (strt + 1); i <= (max_n - slct_num + 1); i++)
+        {
+            tmp = A_arr[i] - A_arr[strt];
+
+            if (tmp >= lower)
+            {
+                ret = tmp;
+                tmp = part_cal(i, (slct_num - 1), max_n, lower);
+
+                if (tmp == -1)
+                {
+                    ret = -1;
+                }
+                else if (ret > tmp)
+                {
+                    ret = tmp;
+                }
+                else
+                {
+                    /* nothing */
+                }
+
+                break;
+            }
+            else{/*nothing*/}
         }
     }
 
-    chk->slct_num = slct_num;
-    chk->maxmin = tmp_maxmin;
-    chk->next = (mem_data *)malloc(mem_size);
-    chk->next->next = (mem_data *)NULL;
 
-    return tmp_maxmin;
+    return ret;
 }
+
