@@ -40,36 +40,32 @@ int main(void)
     half_N = inpt_N >> 1;
 
     tmp = get_ss(half_N, size_kakko);
-printf("%u\n", tmp);
+
     arr = (uint32_t *)malloc(tmp * size_u32t);
     arr_tmp = (uint32_t *)malloc(tmp * size_u32t);
+    p_tmp = mem_arr[half_N];
 
-    for (i = 0U, p_tmp = mem_arr[half_N]; i < tmp; i++)
+    for (i = 0U; i < tmp; i++)
     {
         arr[i] = p_tmp->data;
         p_tmp = p_tmp->next;
-        printf("%u\n", arr[i]);
     }
-    
+  
     sort_mrg_asc(arr, arr_tmp, 0, tmp);
 
-    p_tmp = mem_arr[half_N];
-
-    while (p_tmp->next != (kakko *)NULL)
+    for (i = 0U; i < tmp; i++)
     {
-        if (old != p_tmp->data)
+        if (old != arr[i])
         {
             for(j = inpt_N; j > 0; j--)
             {
-                printf("%c", (char)(((p_tmp->data >> (j - 1U)) & 1U) + MAE));
+                printf("%c", (char)(((arr[i] >> (j - 1U)) & 1U) + MAE));
             }
             printf("\n");
 
-            old = p_tmp->data;
+            old = arr[i];
         }
         else{/*nothing*/}
-
-        p_tmp = p_tmp->next;
     }
 
     return 0;
@@ -80,6 +76,7 @@ uint32_t get_ss(uint32_t h_N, size_t size_k)
     uint32_t i;
     uint32_t ret = 0U;
     kakko *p_tmp;
+    kakko *p_tmp_tmp;
     kakko *p_tmp_b;
     kakko *p_tmp_l;
     kakko *p_tmp_r;
@@ -95,18 +92,23 @@ uint32_t get_ss(uint32_t h_N, size_t size_k)
     {
         get_ss((h_N - 1U), size_k);
 
+        mem_arr[h_N] = (kakko *)malloc(size_k);
         p_tmp = mem_arr[h_N];
+
         p_tmp_b = mem_arr[(h_N - 1U)];
 
         /* ( +S+ ) */
         while (p_tmp_b != (kakko *)NULL)
         {
-            p_tmp = (kakko *)malloc(size_k);
             p_tmp->data = (p_tmp_b->data) << 1;
             p_tmp->data |= 1U;
-            p_tmp = p_tmp->next;
-            p_tmp_b = p_tmp_b->next;
+            
             ret++;
+
+            p_tmp_b = p_tmp_b->next;
+
+            p_tmp->next = (kakko *)malloc(size_k);
+            p_tmp = p_tmp->next;
         }
         
         /* S + T */
@@ -120,20 +122,24 @@ uint32_t get_ss(uint32_t h_N, size_t size_k)
 
                 while (p_tmp_r  != (kakko *)NULL)
                 {
-                    p_tmp = (kakko *)malloc(size_k);
                     p_tmp->data = p_tmp_l->data;
                     p_tmp->data = p_tmp->data << (2 * i);
                     p_tmp->data |= p_tmp_r->data;
-                    p_tmp = p_tmp->next;
-                    p_tmp_r = p_tmp_r->next;
+
                     ret++;
+
+                    p_tmp_r = p_tmp_r->next;
+
+                    p_tmp->next = (kakko *)malloc(size_k);
+                    p_tmp_tmp = p_tmp;
+                    p_tmp = p_tmp->next;
                 }
                 
                 p_tmp_l = p_tmp_l->next;
             }
         }
 
-        p_tmp = (kakko *)NULL;
+        p_tmp_tmp->next = (kakko *)NULL;
     }
 
     return ret;
